@@ -1,4 +1,6 @@
 #include "utils/strutils.h"
+#include <ctype.h>
+#include <stdio.h>
 
 void to_lowercase(char *str) {
   if (str == NULL) {

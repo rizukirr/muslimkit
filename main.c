@@ -11,6 +11,7 @@
 #define TB_IMPL
 
 #include "include/domain/get_cities.h"
+#include "include/domain/get_prayer_times.h"
 #include "include/presentation/uikit.h"
 
 /**
@@ -38,25 +39,27 @@
  */
 int main() {
   /* Fetch list of Indonesian cities from MyQuran API */
-  struct cities_s *cities = get_city();
+  struct cities_s cities;
+  memset(&cities, 0, sizeof(struct cities_s));
+  int get_cities = get_city(&cities);
 
   /* Handle error: city data failed to fetch */
-  if (cities == NULL) {
-    get_city_free(cities); /* Safe to call on NULL pointer */
+  if (get_cities < 0) {
+    get_city_free(&cities); /* Safe to call on NULL pointer */
     printf("cities NULL\n");
     return 1;
   }
 
   /* Verify city data is valid before processing */
-  if (cities->data != NULL && cities->size > 0) {
+  if (cities.data != NULL && cities.size > 0) {
     /* Prepare UI data structure: convert cities to listview items */
-    struct listview_item location[cities->size];
+    struct listview_item location[cities.size];
     memset(location, 0, sizeof(location)); /* Zero-initialize array */
 
     /* Map city data to listview items for UI rendering */
-    for (size_t i = 0; i < cities->size; i++) {
-      location[i].id = cities->data[i].id;       /* City ID (e.g., "1301") */
-      location[i].name = cities->data[i].lokasi; /* City name (e.g., "Jakarta") */
+    for (size_t i = 0; i < cities.size; i++) {
+      location[i].id = cities.data[i].id;       /* City ID (e.g., "1301") */
+      location[i].name = cities.data[i].lokasi; /* City name (e.g., "Jakarta") */
     }
 
     /* Display interactive city selection UI */
@@ -69,13 +72,34 @@ int main() {
      * - Vim mode: j/k navigation, g/G (top/bottom), Ctrl+U/D (page up/down), '/' search
      * - Toggle modes with Ctrl+/
      */
-    listview(title, location, cities->size, &selected);
+    listview(title, location, cities.size, &selected);
 
-    /* Display selected city (placeholder for future prayer time display) */
-    printf("You are select %s[%s] Cities\n", location[selected].name, location[selected].id);
+    struct prayer_times prayer_t;
+    memset(&prayer_t, 0, sizeof(prayer_t));
+    int get_prayer = get_prayer_times(location[selected].id, &prayer_t);
+    if (get_prayer < 0) {
+      get_city_free(&cities);
+      return 1;
+    }
+
+    printf("Schedule size: %d\n", prayer_t.data.schedule_size);
+
+    for (int i = 0; i < prayer_t.data.schedule_size; i++) {
+      printf("{\n");
+      printf("  'date':'%s'\n", prayer_t.data.schedule[i].date);
+      printf("  'fajr':'%s'\n", prayer_t.data.schedule[i].fajr);
+      printf("  'dhuha':'%s'\n", prayer_t.data.schedule[i].dhuha);
+      printf("  'dzuhr':'%s'\n", prayer_t.data.schedule[i].dzuhr);
+      printf("  'ashr':'%s'\n", prayer_t.data.schedule[i].ashr);
+      printf("  'magrib':'%s'\n", prayer_t.data.schedule[i].maghrib);
+      printf("  'isya':'%s'\n", prayer_t.data.schedule[i].isya);
+      printf("}\n");
+    }
+
+    get_prayer_times_free(&prayer_t);
   }
 
   /* Clean up allocated memory before exit */
-  get_city_free(cities);
+  get_city_free(&cities);
   return 0;
 }

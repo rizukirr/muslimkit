@@ -7,15 +7,14 @@
  */
 
 #include "domain/get_cities.h"
-#include "network/connection.h"
 #include "lib/json.h"
+#include "network/connection.h"
 
-struct cities_s *parse_cities_json(const char *json_str) {
+int parse_cities_json(const char *json_str, struct cities_s *dest) {
   JsonNode *root = json_decode(json_str);
   if (root == NULL) {
-    json_delete(root);
     printf("parse_cities_json() root NULL\n");
-    return NULL;
+    return -1;
   }
 
   struct cities_s *result = calloc(1, sizeof(struct cities_s));
@@ -23,7 +22,7 @@ struct cities_s *parse_cities_json(const char *json_str) {
   if (result == NULL) {
     json_delete(root);
     printf("parse_cities_json() calloc failure\n");
-    return NULL;
+    return -1;
   }
 
   const bool status = json_get_bool(root, "status");
@@ -36,52 +35,47 @@ struct cities_s *parse_cities_json(const char *json_str) {
 
     json_foreach(elem, data) { count++; }
 
-    result->data = malloc(count * sizeof(struct cities_data_s));
+    result->data = calloc(count, sizeof(struct cities_data_s));
     if (result->data == NULL) {
-      free(result->data);
       free(result);
       json_delete(root);
       printf("malloc fail");
-      return NULL;
+      return -1;
     }
 
     result->size = count;
 
     size_t idx = 0;
     json_foreach(elem, data) {
-      const char *id = json_get_string(elem, "id");
-
-      if (id == NULL) {
-        printf("id NULL\n");
-        free(result->data);
-        free(result);
-        json_delete(root);
-        return NULL;
+      JsonNode *id = json_find_member(elem, "id");
+      if (id && id->tag == JSON_STRING) {
+        char *tmp = id->string_;
+        result->data[idx].id = strndup(tmp, strlen(tmp));
       }
 
-      const char *location = json_get_string(elem, "lokasi");
-      if (location == NULL) {
-        free(result->data);
-        free(result);
-        json_delete(root);
-        printf("location NULL\n");
-        return NULL;
+      JsonNode *location = json_find_member(elem, "lokasi");
+      if (location && location->tag == JSON_STRING) {
+        char *tmp = location->string_;
+        result->data[idx].lokasi = strndup(tmp, strlen(tmp));
       }
-
-      result->data[idx].id = strndup(id, strlen(id));
-      result->data[idx].lokasi = strndup(location, strlen(location));
 
       idx++;
     }
   }
 
   json_delete(root);
-  return result;
+  *dest = *result;
+  free(result);
+  return 0;
 }
 
-struct cities_s *get_city() {
+int get_city(struct cities_s *dest) {
   int endpoint_len = strlen(API_VERSION) + strlen(CITY_ENDPOINT) + 1;
   char *endpoint = malloc(endpoint_len);
+  if (endpoint == NULL) {
+    fprintf(stderr, "Cannot allocate memory for get_city endpoint\n");
+    return -1;
+  }
   snprintf(endpoint, endpoint_len, "%s%s", API_VERSION, CITY_ENDPOINT);
 
   struct http_response response;
@@ -92,18 +86,21 @@ struct cities_s *get_city() {
 
   if (get_request < 0) {
     http_response_free(&response);
-    return NULL;
+    return -1;
   }
 
-  struct cities_s *city = parse_cities_json(response.body);
-  if (city == NULL) {
-    get_city_free(city);
+  struct cities_s city_s;
+  memset(&city_s, 0, sizeof(struct cities_s));
+  int city = parse_cities_json(response.body, &city_s);
+  if (city < 0) {
+    get_city_free(&city_s);
     http_response_free(&response);
-    return NULL;
+    return -1;
   }
 
+  *dest = city_s;
   http_response_free(&response);
-  return city;
+  return 0;
 }
 
 void get_city_free(struct cities_s *cities) {
@@ -118,5 +115,4 @@ void get_city_free(struct cities_s *cities) {
   }
 
   free(cities->data);
-  free(cities);
 }

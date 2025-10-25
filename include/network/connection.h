@@ -23,10 +23,10 @@
 #define HOST                 "api.myquran.com"    /**< API host domain */
 #define API_VERSION          "/v2"                /**< API version path */
 #define CITY_ENDPOINT        "/sholat/kota/semua" /**< Cities endpoint */
-#define PRAYER_TIME_ENDPOINT "/sholat/jadwal/:kota/:tahun/:bulan" /**< Prayer times endpoint */
-#define ADDR_FAMILY          AF_INET                              /**< IPv4 address family */
-#define ADDR_TYPE            SOCK_STREAM                          /**< TCP socket type */
-#define RADIX                16 /**< Hexadecimal radix for chunk size parsing */
+#define PRAYER_TIME_ENDPOINT "/sholat/jadwal"     /**< Prayer times endpoint */
+#define ADDR_FAMILY          AF_INET              /**< IPv4 address family */
+#define ADDR_TYPE            SOCK_STREAM          /**< TCP socket type */
+#define RADIX                16                   /**< Hexadecimal radix for chunk size parsing */
 #define CHUNK_SIZE           4096
 
 /**
@@ -104,24 +104,6 @@ SSL_CTX *ssl_init(void);
  * @warning You must free the SSL session after use with ssl_session_free().
  */
 SSL *ssl_connect(SSL_CTX *ctx, int fd, const char *hostname);
-
-/**
- * @brief Free memory used by an SSL session.
- *
- * Calls SSL_shutdown() and SSL_free() to release resources.
- *
- * @param ssl   Pointer to the SSL session to free.
- */
-void ssl_session_free(SSL *ssl);
-
-/**
- * @brief Free memory used by an SSL context.
- *
- * Calls SSL_CTX_free() to release resources.
- *
- * @param ctx   Pointer to the SSL_CTX to free.
- */
-void ssl_ctx_free(SSL_CTX *ctx);
 
 /**
  * @brief Extract status code from a raw HTTP Response header

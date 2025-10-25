@@ -63,6 +63,6 @@ void get_city_free(struct cities_s *cities);
  *
  * @warning The returned pointer must be freed using get_cities_free().
  */
-struct cities_s *get_city();
+int get_city(struct cities_s *dest);
 
 #endif

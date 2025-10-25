@@ -120,14 +120,14 @@ SSL *ssl_connect(SSL_CTX *ctx, int fd, const char *hostname) {
   return ssl;
 }
 
-void ssl_session_free(SSL *ssl) {
+static void ssl_session_free(SSL *ssl) {
   if (ssl) {
     SSL_shutdown(ssl);
     SSL_free(ssl);
   }
 }
 
-void ssl_ctx_free(SSL_CTX *ctx) {
+static void ssl_ctx_free(SSL_CTX *ctx) {
   if (ctx) {
     SSL_CTX_free(ctx);
   }
@@ -294,6 +294,9 @@ int get(const char *host, const char *path, struct http_response *dest) {
   char *request = malloc(request_len + 1);
   if (request == NULL) {
     fprintf(stderr, "Cannot allocate memory\n");
+    ssl_session_free(ssl);
+    ssl_ctx_free(ctx);
+    close(sockfd);
     return -1;
   }
 
@@ -354,6 +357,7 @@ int get(const char *host, const char *path, struct http_response *dest) {
   struct http_response response_extract = http_response_extract(response);
   if (response_extract.header == NULL && response_extract.body == NULL) {
     fprintf(stderr, "Cannot extract json response or response invalid\n");
+    free(response);
     return -1;
   }
 

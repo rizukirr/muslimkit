@@ -1,8 +1,5 @@
 #pragma once
 
-#include <ctype.h>
-#include <stdio.h>
-
 /**
  * @brief convert string into lowercase
  *

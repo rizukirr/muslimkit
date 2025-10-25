@@ -369,8 +369,8 @@ void json_delete(JsonNode *node) {
     case JSON_OBJECT: {
       JsonNode *child, *next;
       for (child = node->children.head; child != NULL; child = next) {
-	next = child->next;
-	json_delete(child);
+        next = child->next;
+        json_delete(child);
       }
       break;
     }
@@ -548,7 +548,7 @@ static bool parse_value(const char **sp, JsonNode **out) {
   case 'n':
     if (expect_literal(&s, "null")) {
       if (out)
-	*out = json_mknull();
+        *out = json_mknull();
       *sp = s;
       return true;
     }
@@ -557,7 +557,7 @@ static bool parse_value(const char **sp, JsonNode **out) {
   case 'f':
     if (expect_literal(&s, "false")) {
       if (out)
-	*out = json_mkbool(false);
+        *out = json_mkbool(false);
       *sp = s;
       return true;
     }
@@ -566,7 +566,7 @@ static bool parse_value(const char **sp, JsonNode **out) {
   case 't':
     if (expect_literal(&s, "true")) {
       if (out)
-	*out = json_mkbool(true);
+        *out = json_mkbool(true);
       *sp = s;
       return true;
     }
@@ -576,7 +576,7 @@ static bool parse_value(const char **sp, JsonNode **out) {
     char *str;
     if (parse_string(&s, out ? &str : NULL)) {
       if (out)
-	*out = mkstring(str);
+        *out = mkstring(str);
       *sp = s;
       return true;
     }
@@ -601,7 +601,7 @@ static bool parse_value(const char **sp, JsonNode **out) {
     double num;
     if (parse_number(&s, out ? &num : NULL)) {
       if (out)
-	*out = json_mknumber(num);
+        *out = json_mknumber(num);
       *sp = s;
       return true;
     }
@@ -736,49 +736,49 @@ bool parse_string(const char **sp, char **out) {
       case '"':
       case '\\':
       case '/':
-	*b++ = c;
-	break;
+        *b++ = c;
+        break;
       case 'b':
-	*b++ = '\b';
-	break;
+        *b++ = '\b';
+        break;
       case 'f':
-	*b++ = '\f';
-	break;
+        *b++ = '\f';
+        break;
       case 'n':
-	*b++ = '\n';
-	break;
+        *b++ = '\n';
+        break;
       case 'r':
-	*b++ = '\r';
-	break;
+        *b++ = '\r';
+        break;
       case 't':
-	*b++ = '\t';
-	break;
+        *b++ = '\t';
+        break;
       case 'u': {
-	uint16_t uc, lc;
-	uchar_t unicode;
+        uint16_t uc, lc;
+        uchar_t unicode;
 
-	if (!parse_hex16(&s, &uc))
-	  goto failed;
+        if (!parse_hex16(&s, &uc))
+          goto failed;
 
-	if (uc >= 0xD800 && uc <= 0xDFFF) {
-	  /* Handle UTF-16 surrogate pair. */
-	  if (*s++ != '\\' || *s++ != 'u' || !parse_hex16(&s, &lc))
-	    goto failed; /* Incomplete surrogate pair. */
-	  if (!from_surrogate_pair(uc, lc, &unicode))
-	    goto failed; /* Invalid surrogate pair. */
-	} else if (uc == 0) {
-	  /* Disallow "\u0000". */
-	  goto failed;
-	} else {
-	  unicode = uc;
-	}
+        if (uc >= 0xD800 && uc <= 0xDFFF) {
+          /* Handle UTF-16 surrogate pair. */
+          if (*s++ != '\\' || *s++ != 'u' || !parse_hex16(&s, &lc))
+            goto failed; /* Incomplete surrogate pair. */
+          if (!from_surrogate_pair(uc, lc, &unicode))
+            goto failed; /* Invalid surrogate pair. */
+        } else if (uc == 0) {
+          /* Disallow "\u0000". */
+          goto failed;
+        } else {
+          unicode = uc;
+        }
 
-	b += utf8_write_char(unicode, b);
-	break;
+        b += utf8_write_char(unicode, b);
+        break;
       }
       default:
-	/* Invalid escape */
-	goto failed;
+        /* Invalid escape */
+        goto failed;
       }
     } else if (c <= 0x1F) {
       /* Control characters are not allowed in string literals. */
@@ -790,10 +790,10 @@ bool parse_string(const char **sp, char **out) {
       s--;
       len = utf8_validate_cz(s);
       if (len == 0)
-	goto failed; /* Invalid UTF-8 character. */
+        goto failed; /* Invalid UTF-8 character. */
 
       while (len--)
-	*b++ = *s++;
+        *b++ = *s++;
     }
 
     /*
@@ -1068,50 +1068,50 @@ void emit_string(SB *out, const char *str) {
       len = utf8_validate_cz(s);
 
       if (len == 0) {
-	/*
-	 * Handle invalid UTF-8 character gracefully in production
-	 * by writing a replacement character (U+FFFD)
-	 * and skipping a single byte.
-	 *
-	 * This should never happen when assertions are enabled
-	 * due to the assertion at the beginning of this function.
-	 */
-	assert(false);
-	if (escape_unicode) {
-	  strcpy(b, "\\uFFFD");
-	  b += 6;
-	} else {
-	  *b++ = 0xEF;
-	  *b++ = 0xBF;
-	  *b++ = 0xBD;
-	}
-	s++;
+        /*
+         * Handle invalid UTF-8 character gracefully in production
+         * by writing a replacement character (U+FFFD)
+         * and skipping a single byte.
+         *
+         * This should never happen when assertions are enabled
+         * due to the assertion at the beginning of this function.
+         */
+        assert(false);
+        if (escape_unicode) {
+          strcpy(b, "\\uFFFD");
+          b += 6;
+        } else {
+          *b++ = 0xEF;
+          *b++ = 0xBF;
+          *b++ = 0xBD;
+        }
+        s++;
       } else if (c < 0x1F || (c >= 0x80 && escape_unicode)) {
-	/* Encode using \u.... */
-	uint32_t unicode;
+        /* Encode using \u.... */
+        uint32_t unicode;
 
-	s += utf8_read_char(s, &unicode);
+        s += utf8_read_char(s, &unicode);
 
-	if (unicode <= 0xFFFF) {
-	  *b++ = '\\';
-	  *b++ = 'u';
-	  b += write_hex16(b, unicode);
-	} else {
-	  /* Produce a surrogate pair. */
-	  uint16_t uc, lc;
-	  assert(unicode <= 0x10FFFF);
-	  to_surrogate_pair(unicode, &uc, &lc);
-	  *b++ = '\\';
-	  *b++ = 'u';
-	  b += write_hex16(b, uc);
-	  *b++ = '\\';
-	  *b++ = 'u';
-	  b += write_hex16(b, lc);
-	}
+        if (unicode <= 0xFFFF) {
+          *b++ = '\\';
+          *b++ = 'u';
+          b += write_hex16(b, unicode);
+        } else {
+          /* Produce a surrogate pair. */
+          uint16_t uc, lc;
+          assert(unicode <= 0x10FFFF);
+          to_surrogate_pair(unicode, &uc, &lc);
+          *b++ = '\\';
+          *b++ = 'u';
+          b += write_hex16(b, uc);
+          *b++ = '\\';
+          *b++ = 'u';
+          b += write_hex16(b, lc);
+        }
       } else {
-	/* Write the character directly. */
-	while (len--)
-	  *b++ = *s++;
+        /* Write the character directly. */
+        while (len--)
+          *b++ = *s++;
       }
 
       break;
@@ -1239,40 +1239,40 @@ bool json_check(const JsonNode *node, char errmsg[256]) {
 
     if (head == NULL || tail == NULL) {
       if (head != NULL)
-	problem("tail is NULL, but head is not");
+        problem("tail is NULL, but head is not");
       if (tail != NULL)
-	problem("head is NULL, but tail is not");
+        problem("head is NULL, but tail is not");
     } else {
       JsonNode *child;
       JsonNode *last = NULL;
 
       if (head->prev != NULL)
-	problem("First child's prev pointer is not NULL");
+        problem("First child's prev pointer is not NULL");
 
       for (child = head; child != NULL; last = child, child = child->next) {
-	if (child == node)
-	  problem("node is its own child");
-	if (child->next == child)
-	  problem("child->next == child (cycle)");
-	if (child->next == head)
-	  problem("child->next == head (cycle)");
+        if (child == node)
+          problem("node is its own child");
+        if (child->next == child)
+          problem("child->next == child (cycle)");
+        if (child->next == head)
+          problem("child->next == head (cycle)");
 
-	if (child->parent != node)
-	  problem("child does not point back to parent");
-	if (child->next != NULL && child->next->prev != child)
-	  problem("child->next does not point back to child");
+        if (child->parent != node)
+          problem("child does not point back to parent");
+        if (child->next != NULL && child->next->prev != child)
+          problem("child->next does not point back to child");
 
-	if (node->tag == JSON_ARRAY && child->key != NULL)
-	  problem("Array element's key is not NULL");
-	if (node->tag == JSON_OBJECT && child->key == NULL)
-	  problem("Object member's key is NULL");
+        if (node->tag == JSON_ARRAY && child->key != NULL)
+          problem("Array element's key is not NULL");
+        if (node->tag == JSON_OBJECT && child->key == NULL)
+          problem("Object member's key is NULL");
 
-	if (!json_check(child, errmsg))
-	  return false;
+        if (!json_check(child, errmsg))
+          return false;
       }
 
       if (last != tail)
-	problem("tail does not match pointer found by starting at head and following next links");
+        problem("tail does not match pointer found by starting at head and following next links");
     }
   }
 
