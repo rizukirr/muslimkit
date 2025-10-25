@@ -1,0 +1,33 @@
+# Build directory
+build/
+
+# Binary executables
+muslimkit
+main
+
+# Object files
+*.o
+*.a
+*.so
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# CMake files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+
+# Compilation database
+compile_commands.json
+
+# AI
+CLAUDE.md
+
+.cache
+docs/
